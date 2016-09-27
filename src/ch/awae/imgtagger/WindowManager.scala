@@ -4,11 +4,11 @@ import java.awt.Color
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.Image
+import java.awt.MediaTracker
 
 import scala.language.postfixOps
 
 import javax.swing.JPanel
-import java.awt.MediaTracker
 
 class WindowManager {
 
@@ -28,7 +28,7 @@ class WindowManager {
   }
   def loadImage {
     window.title = manager.current.getOrElse(null) + " (" + manager.index + "/" + manager.filterSize + "/" + manager.totalSize + ")"
-    window.tags = manager.currentTags.getOrElse(Set.empty[Tag]).map(_.text + " ")./:("")(_ + _)
+    window.tags = manager.currentTags.getOrElse(Set.empty[Tag]).toList.map(_.text + " ").sorted./:("")(_ + _)
     if (manager.current.isDefined) {
       val current = manager.current.get
       if (currentImage == null || currentImage._1 != current) {
@@ -92,7 +92,7 @@ class WindowManager {
       val tracker = new MediaTracker(p)
       tracker.addImage(img, 0)
       tracker.waitForAll()
-      
+
       val x = img.getWidth(null).toDouble
       val y = img.getHeight(null).toDouble
       val X = p.getWidth.toDouble
