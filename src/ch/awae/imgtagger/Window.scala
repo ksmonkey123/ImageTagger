@@ -53,6 +53,8 @@ class Window(val manager: WindowManager) {
   private val tagField = new JTextField
   private val tagSave = new JButton("Save")
 
+  private var fieldColor: Color = _
+
   def init {
     import BorderLayout.{ CENTER, NORTH, SOUTH }
     import BoxLayout.{ LINE_AXIS, PAGE_AXIS }
@@ -109,6 +111,8 @@ class Window(val manager: WindowManager) {
     navAuto addActionListener FunctionalActionListener(_ => manager.autoplay(navAuto.isSelected()))
     // FINISH SETUP
     frame pack
+
+    fieldColor = tagField.getBackground
   }
 
   def random = navRand.isSelected
@@ -121,7 +125,10 @@ class Window(val manager: WindowManager) {
   def title_=(t: String) = frame setTitle t
 
   def tags: String = tagField getText
-  def tags_=(t: String) = tagField setText t
+  def tags_=(t: String) = {
+    tagField setText t
+    tagsError(None)
+  }
 
   def delay = try {
     navDelay.getText.toInt
@@ -129,6 +136,15 @@ class Window(val manager: WindowManager) {
     case _: NumberFormatException =>
       navDelay.setText("5")
       5
+  }
+
+  def tagsError(message: Option[String]) = message match {
+    case None =>
+      tagField.setToolTipText(null)
+      tagField.setBackground(fieldColor)
+    case Some(msg) =>
+      tagField.setToolTipText(msg)
+      tagField.setBackground(Color.RED)
   }
 
   def filter: String = filterField getText

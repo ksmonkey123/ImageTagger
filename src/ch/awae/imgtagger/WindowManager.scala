@@ -9,6 +9,7 @@ import java.awt.MediaTracker
 import scala.language.postfixOps
 
 import javax.swing.JPanel
+import scala.util.Left
 
 class WindowManager {
 
@@ -62,8 +63,14 @@ class WindowManager {
     loadImage
   }
   def tagsSaved = {
-    manager.setTags(List(window.tags.split(" "): _*).filterNot(_.isEmpty).map(new Tag(_)).toSet)
-    IO.writeMeta(manager.meta)
+    val list = List(window.tags.split(" "): _*).filterNot(_.isEmpty()).map(s => if (s.matches("[a-zA-Z0-9_]+")) Left(s) else Right(s))
+    val illegals = list.filter(_.isRight)
+    if (illegals.isEmpty) {
+      window.tagsError(None)
+      manager.setTags(list.filter(_.isLeft).map(_.left.get).map(new Tag(_)).toSet)
+      IO.writeMeta(manager.meta)
+    } else
+      window.tagsError(Some(illegals.map(_.right.get)./:("illegal tags: ")(_ + _ + ", ")))
   }
   def navNext = {
     manager.next
@@ -97,8 +104,6 @@ class WindowManager {
       val y = img.getHeight(null).toDouble
       val X = p.getWidth.toDouble
       val Y = p.getHeight.toDouble
-
-      println(x, y)
 
       val ƒ = X / Y
       val ∫ = x / y
