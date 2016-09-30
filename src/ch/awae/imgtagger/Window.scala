@@ -53,6 +53,7 @@ class Window(val manager: WindowManager) {
   private val tagField = new JTextField
   private val tagSave = new JButton("Save")
 
+  private val errorColor = Color.RED.brighter()
   private var fieldColor: Color = _
 
   def init {
@@ -144,7 +145,16 @@ class Window(val manager: WindowManager) {
       tagField.setBackground(fieldColor)
     case Some(msg) =>
       tagField.setToolTipText(msg)
-      tagField.setBackground(Color.RED)
+      tagField.setBackground(errorColor)
+  }
+
+  def filterMessage(message: Either[String, String]) = message match {
+    case Left(msg) =>
+      tagField.setToolTipText(msg)
+      tagField.setBackground(fieldColor)
+    case Right(msg) =>
+      tagField.setToolTipText(msg)
+      tagField.setBackground(errorColor)
   }
 
   def filter: String = filterField getText
