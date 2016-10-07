@@ -13,6 +13,7 @@ import scala.util.Left
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
+import scala.util.Random
 
 class WindowManager {
 
@@ -44,11 +45,6 @@ class WindowManager {
   }
 
   // ACTIONS
-
-  def navRandom = {
-    manager.random
-    loadImage
-  }
 
   def autoplay(b: Boolean) = {
     if (player != null)
@@ -82,10 +78,12 @@ class WindowManager {
       window.tagsError(Some(illegals.map(_.right.get)./:("illegal tags: ")(_ + _ + ", ")))
   }
   def navNext = {
+    manager.randomise(window.random)
     manager.next
     loadImage
   }
   def navPrev = {
+    manager.randomise(window.random)
     manager.previous
     loadImage
   }

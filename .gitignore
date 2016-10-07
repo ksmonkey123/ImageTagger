@@ -1,5 +1,5 @@
 /bin/
 /tags.meta
 /*.jpg
+/*.png
 .cache-main
-ImageTagger-0.1.1.jar
