@@ -60,7 +60,7 @@ class WindowManager {
   }
 
   def filterApplied = {
-    val ƒ = Tokeniser.tokenise andThen QueryParser.shunt andThen QueryParser.compile
+    val ƒ = Tokeniser.tokenise andThen QueryParser.implicitAnd andThen QueryParser.shunt andThen QueryParser.compile
     val filter = Try(ƒ(window.filter))
     filter match {
       case Success(f) =>

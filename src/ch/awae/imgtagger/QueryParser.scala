@@ -49,6 +49,21 @@ object QueryParser {
 
   }
 
+  val implicitAnd = (tokens: List[Token]) => {
+    var stack = List.empty[Token]
+
+    for (t <- tokens) {
+      if (stack.isEmpty)
+        stack ::= t
+      else if (stack.head.isInstanceOf[TagToken] && t.isInstanceOf[TagToken])
+        stack = t :: AndToken :: stack
+      else
+        stack ::= t
+    }
+
+    stack.reverse
+  }
+
   val compile = (tokens: List[Token]) => {
     @tailrec
     def step(queue: List[Token], stack: List[TagFilter]): TagFilter =
