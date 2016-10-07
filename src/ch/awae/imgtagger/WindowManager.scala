@@ -6,20 +6,25 @@ import java.awt.Graphics2D
 import java.awt.Image
 import java.awt.MediaTracker
 
+import scala.Right
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.duration.Duration
 import scala.language.postfixOps
+import scala.util.Failure
+import scala.util.Left
+import scala.util.Success
+import scala.util.Try
 
 import javax.swing.JPanel
-import scala.util.Left
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
-import scala.util.Random
 
 class WindowManager {
 
   private val window = new Window(this)
   private val manager = new ImageManager(List.empty)
   private var currentImage: (String, Image) = _
+  private var nextImage: (String, Future[Image]) = _
   private var player: AutoPlayController = _
 
   // OPS
@@ -37,10 +42,21 @@ class WindowManager {
     if (manager.current.isDefined) {
       val current = manager.current.get
       if (currentImage == null || currentImage._1 != current) {
-        currentImage = current -> IO.getImage(current)
+        if (nextImage != null && nextImage._1 == current)
+          currentImage = (current, Await.result(nextImage._2, Duration.Inf))
+        else
+          currentImage = current -> imgload(current)
+        val nx = manager.nextImg
+        if (nx.isDefined) {
+          val nxt = nx.get
+          if (nxt != null && (nextImage == null || nxt != nextImage._1))
+            nextImage = nxt -> Future(imgload(nxt))
+        }
       }
-    } else
+    } else {
       currentImage = null
+      nextImage = null
+    }
     window.repaint
   }
 
@@ -94,7 +110,20 @@ class WindowManager {
     window show
   }
 
+  def imgload(image: String) = {
+    val i = IO.getImage(image)
+    if (panel != null) {
+      val tracker = new MediaTracker(panel)
+      tracker.addImage(i, 0)
+      tracker.waitForAll()
+    }
+    i
+  }
+
+  private var panel: JPanel = _
+
   def drawImage(p: JPanel, g: Graphics) = {
+    panel = p
     g.setColor(Color.BLACK)
     g.fillRect(0, 0, p.getWidth, p.getHeight)
     if (currentImage != null && currentImage._2 != null) {

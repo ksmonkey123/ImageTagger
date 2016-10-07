@@ -14,6 +14,7 @@ class ImageManager(
   def totalSize = _images.size
   def filterSize = filterSet.size
   def current = Option(filterSet.applyOrElse(currentIndex, (_: Int) => null))
+  def nextImg = Option(filterSet.applyOrElse(cycle.peekNext, (_ : Int) => null))
   def currentTags = current.map(_meta(_))
 
   // contentUpdate
