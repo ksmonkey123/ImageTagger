@@ -32,7 +32,7 @@ class Window(val manager: WindowManager) {
 
   private val frame = new JFrame
 
-  private val imagePanel = new JPanel {
+  val imagePanel = new JPanel {
     override def paint(g: Graphics) = manager.drawImage(this, g)
   }
 
@@ -163,8 +163,22 @@ class Window(val manager: WindowManager) {
 
   def filter: String = filterField getText
 
+  private var ctrlLock = false
+  private var nullLock = false
+  private def applyLock {
+    List(filterField, filterOK) foreach (_.setEnabled(!ctrlLock))
+    List(navNext, navPrev, navAuto, navRand) foreach (_.setEnabled(!nullLock))
+    List(navDelay, tagField, tagSave) foreach (_.setEnabled(!(ctrlLock || nullLock)))
+  }
+
   def lockControls(b: Boolean) = {
-    List(navPrev, navNext, navRand, navDelay, filterField, filterOK, tagField, tagSave) foreach (_.setEnabled(!b))
+    ctrlLock = b
+    applyLock
+  }
+
+  def lockNull(b: Boolean) = {
+    nullLock = b
+    applyLock
   }
 
 }

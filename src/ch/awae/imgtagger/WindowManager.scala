@@ -6,7 +6,6 @@ import java.awt.Graphics2D
 import java.awt.Image
 import java.awt.MediaTracker
 
-import scala.Right
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -14,6 +13,7 @@ import scala.concurrent.duration.Duration
 import scala.language.postfixOps
 import scala.util.Failure
 import scala.util.Left
+import scala.util.Right
 import scala.util.Success
 import scala.util.Try
 
@@ -36,7 +36,9 @@ class WindowManager {
     manager load m
     loadImage
   }
+
   def loadImage {
+    window.lockNull(manager.filterSize == 0)
     window.title = manager.current.getOrElse(null) + " (" + manager.index + "/" + manager.filterSize + "/" + manager.totalSize + ")"
     window.tags = manager.currentTags.getOrElse(Set.empty[Tag]).toList.map(_.text + " ").sorted./:("")(_ + _)
     if (manager.current.isDefined) {
@@ -112,18 +114,13 @@ class WindowManager {
 
   def imgload(image: String) = {
     val i = IO.getImage(image)
-    if (panel != null) {
-      val tracker = new MediaTracker(panel)
-      tracker.addImage(i, 0)
-      tracker.waitForAll()
-    }
+    val tracker = new MediaTracker(window.imagePanel)
+    tracker.addImage(i, 0)
+    tracker.waitForAll()
     i
   }
 
-  private var panel: JPanel = _
-
   def drawImage(p: JPanel, g: Graphics) = {
-    panel = p
     g.setColor(Color.BLACK)
     g.fillRect(0, 0, p.getWidth, p.getHeight)
     if (currentImage != null && currentImage._2 != null) {
@@ -131,10 +128,6 @@ class WindowManager {
       val img = currentImage._2
 
       g2.translate(0.5 * p.getWidth, 0.5 * p.getHeight)
-
-      val tracker = new MediaTracker(p)
-      tracker.addImage(img, 0)
-      tracker.waitForAll()
 
       val x = img.getWidth(null).toDouble
       val y = img.getHeight(null).toDouble
@@ -150,8 +143,6 @@ class WindowManager {
       g2.scale(X / a, Y / b)
 
       g2.drawImage(img, -(x / 2).toInt, -(y / 2).toInt, Color.WHITE, null)
-
-      tracker.removeImage(img)
     }
   }
 }
