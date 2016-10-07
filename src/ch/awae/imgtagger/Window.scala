@@ -150,11 +150,11 @@ class Window(val manager: WindowManager) {
 
   def filterMessage(message: Either[String, String]) = message match {
     case Left(msg) =>
-      tagField.setToolTipText(msg)
-      tagField.setBackground(fieldColor)
+      filterField.setToolTipText(msg)
+      filterField.setBackground(fieldColor)
     case Right(msg) =>
-      tagField.setToolTipText(msg)
-      tagField.setBackground(errorColor)
+      filterField.setToolTipText(msg)
+      filterField.setBackground(errorColor)
   }
 
   def filter: String = filterField getText

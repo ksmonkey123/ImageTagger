@@ -10,6 +10,9 @@ import scala.language.postfixOps
 
 import javax.swing.JPanel
 import scala.util.Left
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 class WindowManager {
 
@@ -58,8 +61,14 @@ class WindowManager {
 
   def filterApplied = {
     val ƒ = Tokeniser.tokenise andThen QueryParser.shunt andThen QueryParser.compile
-    val filter = ƒ(window.filter)
-    manager.applyFilter(filter)
+    val filter = Try(ƒ(window.filter))
+    filter match {
+      case Success(f) =>
+        manager applyFilter f
+        window filterMessage Left(TagFilter.niceString(f))
+      case Failure(t) =>
+        window filterMessage Right(t.toString + ": " + t.getMessage)
+    }
     loadImage
   }
   def tagsSaved = {
