@@ -132,7 +132,11 @@ class Window(val manager: WindowManager) {
   }
 
   def delay = try {
-    navDelay.getText.toInt
+    val a = navDelay.getText.toDouble
+    if (a > 0) a else {
+      navDelay.setText("5")
+      5
+    }
   } catch {
     case _: NumberFormatException =>
       navDelay.setText("5")
