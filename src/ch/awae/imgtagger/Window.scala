@@ -1,26 +1,29 @@
 package ch.awae.imgtagger
 
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
 
 import scala.language.implicitConversions
 import scala.language.postfixOps
 
+import javax.swing.AbstractAction
 import javax.swing.BoxLayout
-import javax.swing.JFrame
-import javax.swing.JPanel
-import javax.swing.JTextField
+import javax.swing.ButtonGroup
 import javax.swing.JButton
-import java.awt.Color
-import java.awt.event.ActionListener
-import java.awt.event.ActionEvent
-import javax.swing.JSeparator
-import javax.swing.SwingConstants
 import javax.swing.JCheckBox
-import com.sun.xml.internal.ws.api.Component
 import javax.swing.JComponent
-import javax.swing.event.ChangeListener
+import javax.swing.JFrame
+import javax.swing.JMenuItem
+import javax.swing.JPanel
+import javax.swing.JPopupMenu
+import javax.swing.JRadioButtonMenuItem
+import javax.swing.JTextField
+import javax.swing.KeyStroke
+import javax.swing.JMenu
 
 class Window(val manager: WindowManager) {
 
@@ -35,6 +38,7 @@ class Window(val manager: WindowManager) {
   val imagePanel = new JPanel {
     override def paint(g: Graphics) = manager.drawImage(this, g)
   }
+  private val imagePopup = new JPopupMenu
 
   private val footPanel = new JPanel
 
@@ -48,6 +52,7 @@ class Window(val manager: WindowManager) {
   private val filterPanel = new JPanel
   private val filterField = new JTextField
   private val filterOK = new JButton("Filter")
+  private val filterPopup = new JPopupMenu
 
   private val tagPanel = new JPanel
   private val tagField = new JTextField
@@ -70,11 +75,37 @@ class Window(val manager: WindowManager) {
     imagePanel setPreferredSize (400, 300)
     frame add (imagePanel, CENTER)
 
+    imagePanel add imagePopup
+    imagePanel setComponentPopupMenu imagePopup
+
+    {
+      val rg = new ButtonGroup
+      val interpolMenu = new JMenu("Interpolation")
+      for (i <- Interpolation.getAll) {
+        val item = new JRadioButtonMenuItem(new AbstractAction(i.title) {
+
+          override def actionPerformed(e: ActionEvent) {
+            manager.interpolationSelected(i)
+          }
+
+        })
+        item.setSelected(i == Interpolation.BICUBIC)
+        rg.add(item)
+        interpolMenu.add(item)
+      }
+      imagePopup.add(interpolMenu)
+    }
+
     // FILTER PANEL SETUP
     filterPanel setLayout new BoxLayout(filterPanel, LINE_AXIS)
     fix(filterOK)
     filterPanel add filterField
+    filterField add filterPopup
+    filterField setComponentPopupMenu filterPopup
     filterPanel add filterOK
+    filterField.getKeymap.addActionForKeyStroke(KeyStroke.getKeyStroke("ENTER"), new AbstractAction {
+      override def actionPerformed(e: ActionEvent) = manager.filterApplied
+    })
     frame add (filterPanel, NORTH)
 
     // FOOTER SETUP
@@ -85,6 +116,10 @@ class Window(val manager: WindowManager) {
     fix(tagSave)
     tagPanel add tagField
     tagPanel add tagSave
+    tagField.getKeymap.addActionForKeyStroke(KeyStroke.getKeyStroke("ENTER"), new AbstractAction {
+      override def actionPerformed(e: ActionEvent) = manager.tagsSaved
+    })
+
     footPanel add tagPanel
 
     // NAV PANEL SETUP
@@ -179,6 +214,22 @@ class Window(val manager: WindowManager) {
   def lockNull(b: Boolean) = {
     nullLock = b
     applyLock
+  }
+
+  def setPopupFilters(fs: List[TagFilter]) = {
+    // remove old stuff
+    filterPopup.removeAll()
+    filterPopup.validate()
+    // build new
+    for (ƒ <- fs) {
+      val s = TagFilter.niceString(ƒ)
+      val item = new JMenuItem(s)
+      item.setAction(new AbstractAction(s) {
+        override def actionPerformed(e: ActionEvent) =
+          filterField.setText(s)
+      })
+      filterPopup.add(item)
+    }
   }
 
 }

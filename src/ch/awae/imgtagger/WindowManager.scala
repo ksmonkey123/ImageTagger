@@ -18,6 +18,7 @@ import scala.util.Success
 import scala.util.Try
 
 import javax.swing.JPanel
+import java.awt.RenderingHints
 
 class WindowManager {
 
@@ -26,6 +27,7 @@ class WindowManager {
   private var currentImage: (String, Image) = _
   private var nextImage: (String, Future[Image]) = _
   private var player: AutoPlayController = _
+  private var meta: Meta = _
 
   // OPS
   def setImages(imgs: List[String]) = {
@@ -34,6 +36,8 @@ class WindowManager {
   }
   def setMeta(m: Meta) = {
     manager load m
+    meta = m
+    window.setPopupFilters(meta.filters)
     loadImage
   }
 
@@ -79,6 +83,9 @@ class WindowManager {
       case Success(f) =>
         manager applyFilter f
         window filterMessage Left(TagFilter.niceString(f))
+        meta.cacheFilter(f)
+        IO.writeMeta(meta)
+        window.setPopupFilters(meta.filters)
       case Failure(t) =>
         window filterMessage Right(t.toString + ": " + t.getMessage)
     }
@@ -119,6 +126,13 @@ class WindowManager {
     i
   }
 
+  private var interpol: Interpolation = Interpolation.BICUBIC
+
+  def interpolationSelected(i: Interpolation) = {
+    interpol = i
+    window.repaint
+  }
+
   def drawImage(p: JPanel, g: Graphics) = {
     g.setColor(Color.BLACK)
     g.fillRect(0, 0, p.getWidth, p.getHeight)
@@ -140,7 +154,7 @@ class WindowManager {
       val b = if (∫ < ƒ) y else x / ƒ
 
       g2.scale(X / a, Y / b)
-
+      interpol activate g2
       g2.drawImage(img, -(x / 2).toInt, -(y / 2).toInt, Color.WHITE, null)
     }
   }

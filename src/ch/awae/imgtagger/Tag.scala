@@ -38,7 +38,7 @@ object TagFilter {
   def niceString(f: ƒ): String = f match {
     case TrueFilter => "no filter"
     case HasTag(r) => r.regex
-    case NotFilter(ƒ) => "!( " + niceString(ƒ) + " )"
+    case NotFilter(ƒ) => "! ( " + niceString(ƒ) + " )"
     case AndFilter(ƒ0, ƒ1) => "( " + niceString(ƒ0) + " && " + niceString(ƒ1) + " )"
     case IOrFilter(ƒ0, ƒ1) => "( " + niceString(ƒ0) + " || " + niceString(ƒ1) + " )"
     case XOrFilter(ƒ0, ƒ1) => "( " + niceString(ƒ0) + " != " + niceString(ƒ1) + " )"
