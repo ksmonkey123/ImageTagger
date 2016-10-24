@@ -29,15 +29,15 @@ object IO {
       new Meta
     else {
       val ois = new ObjectInputStream(new FileInputStream(new File("tags.meta")))
-      val obj = ois.readObject.asInstanceOf[Meta]
+      val obj = ois.readObject.asInstanceOf[PersistenceContainer]
       ois.close
-      obj
+      new Meta(obj)
     }
   }
 
   def writeMeta(meta: Meta) = {
     val oos = new ObjectOutputStream(new FileOutputStream(new File("tags.meta")))
-    oos writeObject meta
+    oos writeObject meta.persistence
     oos.close
   }
 

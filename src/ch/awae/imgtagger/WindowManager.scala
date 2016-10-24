@@ -74,8 +74,7 @@ class WindowManager {
   }
 
   def filterApplied = {
-    val ƒ = Tokeniser.tokenise andThen QueryParser.implicitAnd andThen QueryParser.shunt andThen QueryParser.compile
-    val filter = Try(ƒ(window.filter))
+    val filter = Try(QueryParser.fullParse(window.filter))
     filter match {
       case Success(f) =>
         manager applyFilter f

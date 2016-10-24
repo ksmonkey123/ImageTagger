@@ -6,6 +6,12 @@ import ch.awae.imgtagger.TagFilter._
 
 object QueryParser {
 
+  lazy val fullParse =
+    Tokeniser.tokenise andThen
+      implicitAnd andThen
+      shunt andThen
+      compile
+
   val shunt = (tokens: List[Token]) => {
 
     var input = tokens
