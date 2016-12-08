@@ -19,6 +19,7 @@ import scala.util.Try
 
 import javax.swing.JPanel
 import java.awt.RenderingHints
+import javax.swing.SwingUtilities
 
 class WindowManager {
 
@@ -121,8 +122,8 @@ class WindowManager {
   def imgload(image: String) = {
     val i = IO.getImage(image)
     val tracker = new MediaTracker(window.imagePanel)
-    tracker.addImage(i, 0)
-    tracker.waitForAll()
+    tracker.addImage(i, 1)
+    tracker.waitForID(1)
     i
   }
 

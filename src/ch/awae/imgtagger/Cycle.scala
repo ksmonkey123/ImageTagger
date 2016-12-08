@@ -7,7 +7,8 @@ trait Cycle {
   def next: Int
   def prev: Int
   def current: Int
-  def peekNext: Int
+  def peekNext = apply(1)
+  def apply(i: Int): Int
 }
 
 class LinearCycle(val size: Int) extends Cycle {
@@ -24,8 +25,13 @@ class LinearCycle(val size: Int) extends Cycle {
     _current = if (size > 0) (_current - 1 + size) % size else 0
     _current
   }
-  def peekNext = if (size > 0) (_current + 1) % size else 0
 
+  def apply(i: Int) =
+    if (i >= 0) {
+      if (size > 0) (_current + i) % size else 0
+    } else {
+      if (size > 0) (_current + (size - ((-i % size)))) % size else 0
+    }
 }
 
 class RandomCycle(val size: Int) extends Cycle {
@@ -42,6 +48,11 @@ class RandomCycle(val size: Int) extends Cycle {
     cycle(index)
   } else 0
   def goto(id: Int) = index = cycle.indexOf(id)
-  def peekNext = if (size > 0) cycle((index + 1) % size) else 0
+  def apply(i: Int) = if (size > 0) cycle(if (i >= 0) {
+    if (size > 0) (index + i) % size else 0
+  } else {
+    if (size > 0) (index + (size - ((-i % size)))) % size else 0
+  })
+  else 0
 
 }

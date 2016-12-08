@@ -24,6 +24,7 @@ import javax.swing.JRadioButtonMenuItem
 import javax.swing.JTextField
 import javax.swing.KeyStroke
 import javax.swing.JMenu
+import javax.swing.SwingUtilities
 
 class Window(val manager: WindowManager) {
 
@@ -153,7 +154,7 @@ class Window(val manager: WindowManager) {
 
   def random = navRand.isSelected
 
-  def repaint = { frame.repaint() }
+  def repaint = frame.repaint()
 
   def show = frame setVisible true
 
