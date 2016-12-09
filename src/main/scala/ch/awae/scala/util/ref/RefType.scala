@@ -4,6 +4,7 @@ package ref
 sealed trait RefType[T <: RefType[T]] { self: T => }
 
 object RefType {
+
   sealed trait HARD extends RefType[HARD]
   sealed trait SOFT extends RefType[SOFT]
   sealed trait WEAK extends RefType[WEAK]

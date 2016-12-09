@@ -191,11 +191,11 @@ trait Ref[+A, T <: RefType[T]] extends (() => Option[A]) {
 
   /**
    * @usecase def foreach(f: A => Unit): Unit
-   * 
+   *
    * applies a given function to the referenced object if it exists.
-   * 
+   *
    * @note $RECOVER
-   * 
+   *
    * @param f the function to apply
    */
   def foreach[U](f: A => U): Unit = apply() foreach f

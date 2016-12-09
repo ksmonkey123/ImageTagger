@@ -16,12 +16,16 @@ package model
  * The only exceptions are if the element set is empty (`fullSize == 0`)
  * and/or the current filtered element set is empty (`setSize == 0`)
  *
- * @tparam T the type of the data managed by this $DM
+ * @author Andreas Wälchli <andreas.waelchli@me.com>
+ * @since 0.4.0
+ *
+ * @tparam Key the type of the key instances
+ * @tparam Value the type of the value instances managed by this $DM
  * @define DM `DataManager`
  * @define atomic '''''The execution of this method must be thread-safe and virtually atomic. This may require synchronisation.'''''
  * @define notnull ''May not be ''`null`
  */
-trait DataManager[+T] {
+trait DataManager[+Key, +Value] {
 
   /**
    * The index of the current element.
@@ -76,7 +80,6 @@ trait DataManager[+T] {
    * Selects the ''next'' element according to the currently
    * used indexing rules.
    *
-   * @note $atomic
    * @note by default this is an alias for `stepForward`
    */
   @inline
@@ -86,20 +89,25 @@ trait DataManager[+T] {
    * Selects the ''previous'' element according to the currently
    * used indexing rules.
    *
-   * @note $atomic
    * @note by default this is an alias for `stepBackward`
    */
   @inline
   def << = stepBackward
 
   /**
-   * Provides the currently selected element.
+   * Provides the currently selected key-value pair.
    *
    * @note $atomic
    *
    * @return `Some` element or `None` iff no element is selected (`index == -1`)
    */
-  def current: Option[T]
+  def current: Option[(Key, Value)]
+
+  @inline
+  def currentValue = current map (_._2)
+
+  @inline
+  def currentKey = current map (_._1)
 
   /**
    * Re-Indexes the elements according to the provided indexing function.
@@ -121,7 +129,7 @@ trait DataManager[+T] {
    * @throws IllegalArgumentException if the indexing function `f` violates a requirement listed above.
    * @throws NullPointerException if the indexing function `f` is `null`.
    */
-  def reindex(f: List[T] => List[Int] = (l: List[T]) => (0 until l.length).toList): Unit
+  def reindex(f: List[Key] => List[Int] = (l: List[Key]) => (0 until l.length).toList): Unit
 
   /**
    * Filters the elements according to the provided predicate.
@@ -132,6 +140,6 @@ trait DataManager[+T] {
    * 					The default value for `f` is a predicate with a fixed return value of `true`.
    * @throws NullPointerException if the filtering predicate `f` is `null`.
    */
-  def filter(f: T => Boolean = _ => true): Unit
+  def filter(f: Key => Boolean = _ => true): Unit
 
 }
