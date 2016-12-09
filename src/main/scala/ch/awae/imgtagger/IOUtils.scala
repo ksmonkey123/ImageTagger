@@ -1,8 +1,7 @@
-package ch.awae.imgtagger.io
+package ch.awae.imgtagger
 
 import scala.util.Try
 import scala.xml.XML
-
 import ch.awae.imgtagger.persistence.PersistenceParser
 import ch.awae.imgtagger.persistence.PersistenceRoot
 import scala.xml.PrettyPrinter

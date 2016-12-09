@@ -1,14 +1,10 @@
 package test
 
+import ch.awae.imgtagger.IOUtils
 import ch.awae.imgtagger.persistence.PerImage
 import ch.awae.imgtagger.persistence.PerImageTag
-import ch.awae.imgtagger.persistence.ImageParser
-import ch.awae.imgtagger.persistence.PersistenceRoot
 import ch.awae.imgtagger.persistence.PerMeta
-import ch.awae.imgtagger.persistence.PersistenceParser
-import scala.xml.PrettyPrinter
-import sun.nio.ch.IOUtil
-import ch.awae.imgtagger.io.IOUtils
+import ch.awae.imgtagger.persistence.PersistenceRoot
 
 object TEst extends App {
 
