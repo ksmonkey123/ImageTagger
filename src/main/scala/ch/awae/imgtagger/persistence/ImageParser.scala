@@ -3,6 +3,19 @@ package persistence
 
 import scala.xml.Node
 
+/**
+ * Parser for a single image entry.
+ *
+ * The XML syntax is:{{{
+ * <image name="\$name">
+ *   <tag value="\$tag"/>
+ *   { /* remaining tags listed here */ }
+ * </image>
+ * }}}
+ *
+ * @author Andreas Wälchli <andreas.waelchli@me.com>
+ * @since 0.4.0
+ */
 object ImageParser extends XMLParser[PerImage] {
 
   def toXML(x: PerImage): Node =
