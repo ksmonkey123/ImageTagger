@@ -7,25 +7,23 @@ import ch.awae.imgtagger.persistence.PersistenceRoot
 import ch.awae.imgtagger.persistence.PerMeta
 import ch.awae.imgtagger.persistence.PersistenceParser
 import scala.xml.PrettyPrinter
+import sun.nio.ch.IOUtil
+import ch.awae.imgtagger.io.IOUtils
 
 object TEst extends App {
 
   val p1 = PersistenceRoot(
-    "1.0",
+    "1.1",
     PerImage("aaa", PerImageTag("123") :: PerImageTag("456") :: Nil) ::
       PerImage("bbb", PerImageTag("789") :: Nil) ::
       Nil, PerMeta())
 
-  println(p1)
+  val file = "temp.itm"
 
-  val xml = PersistenceParser toXML p1
+  IOUtils.savePersistence(file, p1)
 
-  println(new PrettyPrinter(30, 2).format(xml))
+  val p2 = IOUtils.loadPersistence(file)
 
-  val p2 = PersistenceParser fromXML xml
-
-  println(p2)
-
-  println(p1 == p2)
+  println(p1 == p2.get)
 
 }
