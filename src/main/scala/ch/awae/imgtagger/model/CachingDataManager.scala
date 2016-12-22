@@ -2,9 +2,8 @@ package ch.awae.imgtagger
 package model
 
 import scala.collection.mutable
+
 import ch.awae.scala.util.ref.Ref
-import ch.awae.scala.util.ref.RefType
-import scala.annotation.tailrec
 
 class CachingDataManager[Key, Value](seeds: List[Key], supplier: Key => Value, hardRange: Int, softRange: Int) extends DataManager[Key, Value] {
 
@@ -95,7 +94,5 @@ class CachingDataManager[Key, Value](seeds: List[Key], supplier: Key => Value, h
     _sorter = default_sorter
     updateKeySet
   }
-  
-  
 
 }
