@@ -1,12 +1,14 @@
 package ch.awae.imgtagger
 package model
 
+import sun.security.util.Length
+
 /**
  * Read-Only $DM with optional caching.
  *
  * The $DM must ensure thread safety and data
- * consistency. Data is indexed and the indexing must
- * be changeable through re-indexing. Re-Indexing must
+ * consistency. Data is sorted and the sorting must
+ * be changeable through re-sorting. Re-Sorting must
  * also be thread safe. The $DM is always keeping track
  * of on ''selected'' element. Other items can be selected
  * by use of the navigation methods `stepForward`,
@@ -25,7 +27,7 @@ package model
  * @define atomic '''''The execution of this method must be thread-safe and virtually atomic. This may require synchronisation.'''''
  * @define notnull ''May not be ''`null`
  */
-trait DataManager[+Key, +Value] {
+trait DataManager[Key, Value] {
 
   /**
    * The index of the current element.
@@ -82,7 +84,6 @@ trait DataManager[+Key, +Value] {
    *
    * @note by default this is an alias for `stepForward`
    */
-  @inline
   def >> = stepForward
 
   /**
@@ -91,7 +92,6 @@ trait DataManager[+Key, +Value] {
    *
    * @note by default this is an alias for `stepBackward`
    */
-  @inline
   def << = stepBackward
 
   /**
@@ -110,26 +110,30 @@ trait DataManager[+Key, +Value] {
   def currentKey = current map (_._1)
 
   /**
-   * Re-Indexes the elements according to the provided indexing function.
+   * Sorts the elements according to the provided sorting function.
    *
-   * The indexing function `f` provides a `List` with the new indices when
-   * given the full list of filtered elements. The following requirement
-   * must be satisfied:
-   *   - The index `List` provided by `f` must have the same number of
-   *       elements as the provided element `List`. (This is equal to `setSize`)
-   *   - All indices must fall into the range `[0, setSize-1]`.
-   *   - All indices must be unique.
-   *   - Therefore all numbers in the range `[0, setSize-1]` must appear
-   *       ''exactly'' once.
+   * The sorting function `f` sorts a list of elements:
+   *   - All elements in the input list must appear in the output
+   *   		list ''exactly'' once.
+   *   - All elements of the output list must be unique.
+   *   - No new elements may be introduced into the output list.
+   *   - Therefore the output list must be a permutation of the input list.
    *
    * @note $atomic
    *
-   * @param f an indexing function satisfying the requirements listed above. $notnull.
-   * 					The default value for `f` is a sequential indexer that indexes the list in order.
-   * @throws IllegalArgumentException if the indexing function `f` violates a requirement listed above.
-   * @throws NullPointerException if the indexing function `f` is `null`.
+   * @param f a sorting function satisfying the requirements listed above. $notnull.
+   * 					The default value for `f` is taken from the `default_sorter`.
+   * @throws IllegalArgumentException if the sorting function `f` violates a requirement listed above.
+   * @throws NullPointerException if the sorting function `f` is `null`.
    */
-  def reindex(f: List[Key] => List[Int] = (l: List[Key]) => (0 until l.length).toList): Unit
+  def sort(f: List[Key] => List[Key] = default_sorter): Unit
+
+  /**
+   * the default sorter
+   *
+   * By default this returns the input list itself
+   */
+  def default_sorter = (l: List[Key]) => l
 
   /**
    * Filters the elements according to the provided predicate.
@@ -141,5 +145,15 @@ trait DataManager[+Key, +Value] {
    * @throws NullPointerException if the filtering predicate `f` is `null`.
    */
   def filter(f: Key => Boolean = _ => true): Unit
+
+  /**
+   * Resets the data manager.
+   *
+   * Resets the filter and the sorter to the `default_sorter`.
+   * Jumps back to the first image (`index = 0`).
+   *
+   * @note $atomic
+   */
+  def reset: Unit
 
 }

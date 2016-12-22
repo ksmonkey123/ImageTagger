@@ -11,7 +11,8 @@ class CachingDataManager[Key, Value](seeds: List[Key], supplier: Key => Value, h
   val fullSize = seeds.size
 
   private val map: mutable.HashMap[Key, Ref[Value, _]] = mutable.HashMap.empty
-  private var indexTable: List[Int] = (0 until fullSize).toList
+  // index: sequence, value: target
+  private var keySet: List[Key] = default_sorter(seeds)
   private var pointer: Int = 0
 
   // load map with weak refs (not loaded)
@@ -20,28 +21,37 @@ class CachingDataManager[Key, Value](seeds: List[Key], supplier: Key => Value, h
   }
   forceRefUpdate
 
-  def index: Int = synchronized(indexTable(pointer))
+  def index: Int = synchronized(seeds indexOf keySet(pointer))
 
-  def setSize = synchronized(indexTable.size)
+  def setSize = synchronized(keySet.size)
 
   def current: Option[(Key, Value)] = synchronized {
     if (pointer == -1)
       None
     else {
-      val k = seeds(indexTable(pointer))
+      val k = keySet(pointer)
       val v = map(k)
       Some(k -> v.get)
     }
   }
 
-  private def hasSoft = indexTable.size > (2 * hardRange + 1)
-  private def hasWeak = indexTable.size > (2 * softRange + 1)
-
   private def forceRefUpdate = synchronized {
     // determine ranges
-    val hards = (for (i <- -hardRange to hardRange) yield indexTable(pointer + i)).toList.distinct map (seeds(_))
-    val unweak = (for (i <- -softRange to softRange) yield indexTable(pointer + i)).toList.distinct map (seeds(_))
-    val weaks = indexTable map (seeds(_)) diff unweak
+    val hards =
+      (-hardRange to hardRange)
+        .map(i => (i + pointer) %+ setSize)
+        .distinct
+        .map(keySet)
+        .toList
+
+    val unweak =
+      (-softRange to softRange)
+        .map(i => (i + pointer) %+ setSize)
+        .distinct
+        .map(keySet)
+        .toList
+
+    val weaks = seeds diff unweak
     val softs = unweak diff hards
     // convert refs
     for (id <- weaks) map(id) = map(id).toWeak
@@ -49,45 +59,43 @@ class CachingDataManager[Key, Value](seeds: List[Key], supplier: Key => Value, h
     for (id <- hards) map(id) = map(id).toHard
   }
 
-  @tailrec
-  private def mod(x: Int, n: Int): Int =
-    if (x >= n)
-      mod(x - n, n)
-    else if (x < 0)
-      mod(x + n, n)
-    else
-      x
-
   def stepForward: Unit = synchronized {
-    if (hasWeak) {
-      val id_1 = seeds(indexTable(mod(pointer - softRange, setSize)))
-      map(id_1) = map(id_1).toWeak
-      val id_2 = seeds(indexTable(mod(pointer + softRange + 1, setSize)))
-      map(id_2) = map(id_2).toSoft
-    }
-    if (hasSoft) {
-      val id_1 = seeds(indexTable(mod(pointer - hardRange, setSize)))
-      map(id_1) = map(id_1).toSoft
-      val id_2 = seeds(indexTable(mod(pointer + hardRange + 1, setSize)))
-      map(id_2) = map(id_2).toHard
-    }
-    pointer = mod(pointer + 1, setSize)
+    pointer = (pointer + 1) %+ setSize
+    forceRefUpdate
   }
 
   def stepBackward: Unit = synchronized {
-    pointer = mod(pointer - 1, setSize)
-    if (hasWeak) {
-      val id_1 = seeds(indexTable(mod(pointer - softRange, setSize)))
-      map(id_1) = map(id_1).toSoft
-      val id_2 = seeds(indexTable(mod(pointer + softRange + 1, setSize)))
-      map(id_2) = map(id_2).toWeak
-    }
-    if (hasSoft) {
-      val id_1 = seeds(indexTable(mod(pointer - hardRange, setSize)))
-      map(id_1) = map(id_1).toHard
-      val id_2 = seeds(indexTable(mod(pointer + hardRange + 1, setSize)))
-      map(id_2) = map(id_2).toSoft
-    }
+    pointer = (pointer - 1) %+ setSize
+    forceRefUpdate
   }
+
+  private var _filter: Key => Boolean = (_ => true)
+  private var _sorter: List[Key] => List[Key] = default_sorter
+
+  def filter(f: Key => Boolean): Unit = synchronized {
+    _filter = f
+    updateKeySet
+  }
+
+  def sort(f: List[Key] => List[Key]): Unit = synchronized {
+    _sorter = f
+    updateKeySet
+  }
+
+  private def updateKeySet = {
+    val activeKey = currentKey
+    keySet = this._sorter(seeds.filter(this._filter))
+    val newIndex = activeKey.map(keySet.indexOf).getOrElse(-1)
+    pointer = if (newIndex == -1) if (setSize == 0) -1 else 0 else newIndex
+    forceRefUpdate
+  }
+
+  def reset: Unit = {
+    _filter = (_ => true)
+    _sorter = default_sorter
+    updateKeySet
+  }
+  
+  
 
 }
