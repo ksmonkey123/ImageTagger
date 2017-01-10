@@ -4,6 +4,7 @@ package model
 import scala.collection.mutable
 
 import ch.awae.scala.util.ref.Ref
+import ch.awae.scala.util.Resettable
 
 class CachingDataManager[Key, Value](seeds: List[Key], supplier: Key => Value, hardRange: Int, softRange: Int) extends DataManager[Key, Value] {
 
@@ -68,30 +69,30 @@ class CachingDataManager[Key, Value](seeds: List[Key], supplier: Key => Value, h
     forceRefUpdate
   }
 
-  private var _filter: Key => Boolean = (_ => true)
-  private var _sorter: List[Key] => List[Key] = default_sorter
+  private var _filter: Resettable[Key => Boolean] = Resettable(_ => true)
+  private var _sorter: Resettable[List[Key] => List[Key]] = Resettable(default_sorter)
 
   def filter(f: Key => Boolean): Unit = synchronized {
-    _filter = f
+    _filter = _filter set f
     updateKeySet
   }
 
   def sort(f: List[Key] => List[Key]): Unit = synchronized {
-    _sorter = f
+    _sorter = _sorter set f
     updateKeySet
   }
 
   private def updateKeySet = {
     val activeKey = currentKey
-    keySet = this._sorter(seeds.filter(this._filter))
+    keySet = this._sorter()(seeds.filter(this._filter()))
     val newIndex = activeKey.map(keySet.indexOf).getOrElse(-1)
     pointer = if (newIndex == -1) if (setSize == 0) -1 else 0 else newIndex
     forceRefUpdate
   }
 
   def reset: Unit = {
-    _filter = (_ => true)
-    _sorter = default_sorter
+    _filter = _filter.reset
+    _sorter = _sorter.reset
     updateKeySet
   }
 
