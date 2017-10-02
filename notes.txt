@@ -1,0 +1,17 @@
+main(args):
+  Application.launch(app: Class[_ <: Application], args)
+  
+A <: Application:
+  -> def start(s: Stage)
+  
+###################
+
+class App(stage: Stage) {
+  // init here
+}
+
+class Proxy[A <: App] <: Application {
+  def start(s: Stage) {
+    new A(s)
+  }
+}
